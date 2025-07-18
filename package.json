@@ -1,0 +1,27 @@
+{
+  "name": "strathspey-scraper-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server-express": "^3.13.0",
+    "axios": "^1.10.0",
+    "cheerio": "^1.1.0",
+    "express": "^5.1.0",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.14",
+    "@types/node-cache": "^4.2.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3"
+  }
+}
