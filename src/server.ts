@@ -14,12 +14,20 @@ const typeDefs = gql`
     value: [String]!
   }
 
+  type Link {
+    domain: String!
+    id: String!
+    description: String
+    relation: String
+  }
+
   type Scrape {
     scrapeType: String!
     id: String!
     name: String!
     extraInfo: String
     props: [KeyValue]
+    links: [Link]
   }
 
   type Query {

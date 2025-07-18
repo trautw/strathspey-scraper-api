@@ -6,11 +6,19 @@ interface Kv {
   value: string;
 }
 
+export interface Link {
+  domain: string;
+  id: string;
+  description: string;
+  relation: string;
+}
+
 export interface Scrape {
   scrapeType: string;
   id: string;
   name: string;
   props: { key: string , value: string[] }[];
+  links: Link[];
   extraInfo: string;
 }
 
@@ -37,6 +45,7 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
   const kv: Kv[] = [];
 
   let myMap = new Map<string, string[]>([]);
+  let link: Link[] = [];
   row.find('dt').each((_, el) => {
     const key = $(el).text();
     const value = "unset";
@@ -49,18 +58,19 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
     const linksKey = "Links:"+kv[i].key;
     if ($(el).find('li').length > 0) {
       const v: string[] = [];
-      const links: string[] = [];
       $(el).find('li').each((_, li) => {
         v.push($(li).text());
         const href = $(li).find('a').attr("href");
         if (href) {
-          links.push("strathspey:"+href);
+          link.push({
+            relation: kv[i].key,
+            domain: href.split('/')[2],
+            id: href.split('/')[3],
+            description: $(li).text(),
+          });
         }
       });
       myMap.set(key,v);
-      if (links.length > 0) {
-        myMap.set(linksKey,links);
-      }
     } else {
       myMap.set(key,[$(el).text()]);
     }
@@ -72,13 +82,15 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
     props.push({key , value});
   });
 
+  console.log(`Length = ${link.length}`);
   const s: Scrape = {
     scrapeType,
     id,
     name,
     extraInfo,
-    props
-  }
+    props,
+    links: link
+  };
 
   cache.set(cacheKey, s);
   console.log(refresh ? '🔁 Forced refresh of data' : '📦 Scraped and saved to cache');
