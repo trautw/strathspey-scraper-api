@@ -1,6 +1,6 @@
 // src/server.ts
 import express from 'express';
-import { scrapeBooks, Book, scrapePerson, Person } from './scraper';
+import { scrapePerson, Person, Dance, scrapeDance } from './scraper';
 import { ApolloServer } from 'apollo-server-express';
 import { gql } from 'graphql-tag';
 
@@ -38,6 +38,9 @@ const typeDefs = gql`
 // GraphQL resolvers
 const resolvers = {
   Query: {
+    dance: async (_: any, args: { id: string, refresh?: boolean }): Promise<Dance> => {
+      return scrapeDance(args.id, args.refresh || false);
+    },
     person: async (_: any, args: { id: string, refresh?: boolean }): Promise<Person> => {
       return scrapePerson(args.id, args.refresh || false);
     },
