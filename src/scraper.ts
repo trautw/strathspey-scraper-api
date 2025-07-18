@@ -17,8 +17,7 @@ export interface Scrape {
   scrapeType: string;
   id: string;
   name: string;
-  props: { key: string , value: string[] }[];
-  links: Link[];
+  props: { key: string , value: string[], links: Link[] }[];
   extraInfo: string;
 }
 
@@ -43,9 +42,9 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
   const extraInfo = $('#extrainfo').text();
 
   const kv: Kv[] = [];
+  const props: {key: string, value: string[], links: Link[]}[] = [];
 
   let myMap = new Map<string, string[]>([]);
-  let link: Link[] = [];
   row.find('dt').each((_, el) => {
     const key = $(el).text();
     const value = "unset";
@@ -55,14 +54,14 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
   row.find('dd').each((_, el) => {
     let value: string;
     const key = kv[i].key;
-    const linksKey = "Links:"+kv[i].key;
+    let links: Link[] = [];
     if ($(el).find('li').length > 0) {
-      const v: string[] = [];
+      const value: string[] = [];
       $(el).find('li').each((_, li) => {
-        v.push($(li).text());
+        value.push($(li).text());
         const href = $(li).find('a').attr("href");
         if (href) {
-          link.push({
+          links.push({
             relation: kv[i].key,
             domain: href.split('/')[2],
             id: href.split('/')[3],
@@ -70,26 +69,20 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
           });
         }
       });
-      myMap.set(key,v);
+      props.push({key , value, links});
+      myMap.set(key,value);
     } else {
       myMap.set(key,[$(el).text()]);
     }
     i++;
   });
 
-  const props: {key: string, value: string[]}[] = [];
-  myMap.forEach((value, key) => {
-    props.push({key , value});
-  });
-
-  console.log(`Length = ${link.length}`);
   const s: Scrape = {
     scrapeType,
     id,
     name,
     extraInfo,
     props,
-    links: link
   };
 
   cache.set(cacheKey, s);

@@ -11,7 +11,8 @@ const PORT = 3000;
 const typeDefs = gql`
   type KeyValue {
     key: String!
-    value: [String]!
+    value: [String]
+    links: [Link]
   }
 
   type Link {
@@ -27,7 +28,6 @@ const typeDefs = gql`
     name: String!
     extraInfo: String
     props: [KeyValue]
-    links: [Link]
   }
 
   type Query {
@@ -36,6 +36,10 @@ const typeDefs = gql`
 
   type Query {
     person(id: String, refresh: Boolean): Scrape
+  }
+
+  type Query {
+    tune(id: String, refresh: Boolean): Scrape
   }
 
   type Query {
@@ -54,6 +58,9 @@ const resolvers = {
     },
     formation: async (_: any, args: { id: string, refresh?: boolean }): Promise<Scrape> => {
       return scrape("Formation", args.id, args.refresh || false);
+    },
+    tune: async (_: any, args: { id: string, refresh?: boolean }): Promise<Scrape> => {
+      return scrape("Tune", args.id, args.refresh || false);
     },
   },
 };
