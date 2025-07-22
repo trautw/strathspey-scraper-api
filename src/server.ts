@@ -22,12 +22,22 @@ const typeDefs = gql`
     relation: String
   }
 
+  type Row {
+    data: [KeyValue]
+  }
+
+  type Table {
+    name: String
+    data: [Row]
+  }
+
   type Scrape {
     scrapeType: String!
     id: String!
     name: String!
     extraInfo: String
     props: [KeyValue]
+    tables: [Table]
   }
 
   type Query {
@@ -45,7 +55,10 @@ const typeDefs = gql`
   type Query {
     formation(id: String, refresh: Boolean): Scrape
   }
-`;
+  type Query {
+    list(id: String, refresh: Boolean): Scrape
+  }
+  `;
 
 // GraphQL resolvers
 const resolvers = {
@@ -61,6 +74,9 @@ const resolvers = {
     },
     tune: async (_: any, args: { id: string, refresh?: boolean }): Promise<Scrape> => {
       return scrape("Tune", args.id, args.refresh || false);
+    },
+    list: async (_: any, args: { id: string, refresh?: boolean }): Promise<Scrape> => {
+      return scrape("List", args.id, args.refresh || false);
     },
   },
 };
