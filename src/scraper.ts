@@ -30,9 +30,34 @@ export interface Scrape {
   scrapeType: string;
   id: string;
   name: string;
-  props: Prop[]; // { key: string , value: string[], links: Link[] }[];
+  props: Prop[]; 
   extraInfo: string;
   tables: Table[];
+}
+
+// function parseEntry(key: string, el: cheerio.Cheerio<Element> ): Prop {
+function parseEntry(key: string, val: string ): Prop {
+    let links: Link[] = [];
+    const value: string[] = [];
+
+    value.push(val);
+
+    try {
+      const $ = cheerio.load(val);
+      const href = $('a').attr("href");
+        if (href) {
+          links.push({
+            relation: "aRelation",
+            domain: href.split('/')[4],
+            id: href.split('/')[5],
+            description: $.text(),
+          });
+        }
+    } catch (error) {
+      console.log(`No html: ${val}`);
+    };
+
+  return {key, value, links};
 }
 
 const cache = new NodeCache({ stdTTL: 600 }); // 10-minute TTL
@@ -55,7 +80,7 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
   const $ = cheerio.load(html);
 
   const tabContent = $('.tab-content');
-  const row = tabContent.find('.row');
+  const $row = tabContent.find('.row');
   const name = $('#title').text();
   const extraInfo = $('#extrainfo').text();
 
@@ -64,13 +89,13 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
 
   let myMap = new Map<string, string[]>([]);
 
-  row.find('dt').each((_, el) => {
+  $row.find('dt').each((_, el) => {
     const key = $(el).text();
     const value = "unset";
     kv.push({ key, value });
   });
   let i = 0;
-  row.find('dd').each((_, el) => {
+  $row.find('dd').each((_, el) => {
     let value: string;
     const key = kv[i].key;
     let links: Link[] = [];
@@ -89,6 +114,7 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
         }
       });
       props.push({key , value, links});
+      // props.push(parseEntry(key,el));
       myMap.set(key,value);
     } else {
       myMap.set(key,[$(el).text()]);
@@ -103,7 +129,7 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
 
   const tables: Table[] = []
   const tableData: TableRow[] = [];
-  const columnName: String[] = [];
+  const columnName: string[] = [];
   const headLine = $('#dtab > thead > tr');
   headLine.find('th').each((_, th) => {
     columnName.push($(th).text());
@@ -119,7 +145,8 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
   data.forEach((row,i) => {
     const d: Prop[]= [];
     columnName.forEach((name, i) => {
-      d.push({key: name, value: [row[i]], links: []});
+      // d.push({key: name, value: [row[i]], links: []});
+      d.push(parseEntry(name, row[i]));
     });
     tableData.push( {data: d});
   });
