@@ -97,7 +97,7 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
   const kv: Kv[] = [];
   const props: {key: string, value: string[], links: Link[]}[] = [];
 
-  $row.find('dt').each((_, el) => {
+  $row.find('dt').map((_, el) => {
     const key = $(el).text();
     const value = "unset";
     kv.push({ key, value });
@@ -125,7 +125,7 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
   const tableData: TableRow[] = [];
   const columnName: string[] = [];
   const headLine = $('#dtab > thead > tr');
-  headLine.find('th').each((_, th) => {
+  headLine.find('th').map((_, th) => {
     columnName.push($(th).text());
   });
 
@@ -138,7 +138,7 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
     const data = axiosData.data;
     data.forEach((row,i) => {
       const d: Prop[]= [];
-      columnName.forEach((name, i) => {
+      columnName.map((name, i) => {
         d.push(parseStringEntry(name, row[i]));
       });
       tableData.push( {columns: d});
