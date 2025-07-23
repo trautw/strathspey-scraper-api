@@ -14,11 +14,11 @@ export interface Link {
 }
 
 export interface TableRow {
-  data: Prop[];
+  columns: Prop[];
 }
 export interface Table {
   name: string;
-  data: TableRow[];
+  rows: TableRow[];
 }
 
 export interface Prop { 
@@ -144,10 +144,9 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
       columnName.forEach((name, i) => {
         d.push(parseStringEntry(name, row[i]));
       });
-      // tableData.push( {data: d});
-      tableData.push( {data: d});
+      tableData.push( {columns: d});
     });
-    tables.push({name: 'DanceList', data: tableData});
+    tables.push({name: 'DanceList', rows: tableData});
   } catch {
     console.log('Axios call error');
   }

@@ -23,12 +23,12 @@ const typeDefs = gql`
   }
 
   type Row {
-    data: [KeyValue]
+    columns: [KeyValue]
   }
 
   type Table {
     name: String
-    data: [Row]
+    rows: [Row]
   }
 
   type Scrape {
