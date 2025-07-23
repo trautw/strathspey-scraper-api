@@ -58,6 +58,9 @@ const typeDefs = gql`
   type Query {
     list(id: String, refresh: Boolean): Scrape
   }
+  type Query {
+    publication(id: String, refresh: Boolean): Scrape
+  }
   `;
 
 // GraphQL resolvers
@@ -77,6 +80,9 @@ const resolvers = {
     },
     list: async (_: any, args: { id: string, refresh?: boolean }): Promise<Scrape> => {
       return scrape("List", args.id, args.refresh || false);
+    },
+    publication: async (_: any, args: { id: string, refresh?: boolean }): Promise<Scrape> => {
+      return scrape("Publication", args.id, args.refresh || false);
     },
   },
 };

@@ -35,8 +35,25 @@ export interface Scrape {
   tables: Table[];
 }
 
-// function parseEntry(key: string, el: cheerio.Cheerio<Element> ): Prop {
-function parseEntry(key: string, val: string ): Prop {
+function getLinks($: cheerio.CheerioAPI ): Link[] {
+  let links: Link[] = [];
+
+  $('a').map((_, el) => {
+    const href = el.attribs["href"];
+    if (href) {
+      const uri = href.replace(danceDatabaseUrl,'').replace('/dd','');
+      links.push({
+        relation: "aRelation",
+        domain: uri.split('/')[1],
+        id: uri.split('/')[2],
+        description: $.text(),
+      });
+    }
+  });
+  return links;
+}
+
+function parseStringEntry(key: string, val: string ): Prop {
     let links: Link[] = [];
     const value: string[] = [];
 
@@ -44,15 +61,7 @@ function parseEntry(key: string, val: string ): Prop {
 
     try {
       const $ = cheerio.load(val);
-      const href = $('a').attr("href");
-        if (href) {
-          links.push({
-            relation: "aRelation",
-            domain: href.split('/')[4],
-            id: href.split('/')[5],
-            description: $.text(),
-          });
-        }
+      links = getLinks($);
     } catch (error) {
       // console.log(`No html: ${val}`);
     };
@@ -81,13 +90,12 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
 
   const tabContent = $('.tab-content');
   const $row = tabContent.find('.row');
+  // console.log(`row = ${ $row }`);
   const name = $('#title').text();
   const extraInfo = $('#extrainfo').text();
 
   const kv: Kv[] = [];
   const props: {key: string, value: string[], links: Link[]}[] = [];
-
-  let myMap = new Map<string, string[]>([]);
 
   $row.find('dt').each((_, el) => {
     const key = $(el).text();
@@ -101,23 +109,9 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
     let links: Link[] = [];
     if ($(el).find('li').length > 0) {
       const value: string[] = [];
-      $(el).find('li').each((_, li) => {
-        value.push($(li).text());
-        const href = $(li).find('a').attr("href");
-        if (href) {
-          links.push({
-            relation: kv[i].key,
-            domain: href.split('/')[2],
-            id: href.split('/')[3],
-            description: $(li).text(),
-          });
-        }
+      $(el).find('li').map((_, li) => {
+        props.push(parseStringEntry(key,$(li.childNodes[0]).toString()));
       });
-      props.push({key , value, links});
-      // props.push(parseEntry(key,el));
-      myMap.set(key,value);
-    } else {
-      myMap.set(key,[$(el).text()]);
     }
     i++;
   });
@@ -148,8 +142,9 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
     data.forEach((row,i) => {
       const d: Prop[]= [];
       columnName.forEach((name, i) => {
-        d.push(parseEntry(name, row[i]));
+        d.push(parseStringEntry(name, row[i]));
       });
+      // tableData.push( {data: d});
       tableData.push( {data: d});
     });
     tables.push({name: 'DanceList', data: tableData});
