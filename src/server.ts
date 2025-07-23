@@ -1,6 +1,6 @@
 // src/server.ts
 import express from 'express';
-import { scrapePerson, Person, Dance, scrapeDance, scrapeFormation, Formation, scrape, Scrape } from './scraper';
+import { scrapePerson, Person, Dance, scrapeDance, scrapeFormation, Formation, scrape, Scrape, searchDance } from './scraper';
 import { ApolloServer } from 'apollo-server-express';
 import { gql } from 'graphql-tag';
 
@@ -61,6 +61,9 @@ const typeDefs = gql`
   type Query {
     publication(id: String, refresh: Boolean): Scrape
   }
+  type Query {
+    searchdance(author: String, refresh: Boolean): Scrape
+  }
   `;
 
 // GraphQL resolvers
@@ -83,6 +86,9 @@ const resolvers = {
     },
     publication: async (_: any, args: { id: string, refresh?: boolean }): Promise<Scrape> => {
       return scrape("Publication", args.id, args.refresh || false);
+    },
+    searchdance: async (_: any, args: { author: string, refresh?: boolean }): Promise<Scrape> => {
+      return searchDance("SearchDance", args.author, args.refresh || false);
     },
   },
 };

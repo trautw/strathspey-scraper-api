@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import NodeCache from 'node-cache';
+import qs from 'qs';
 interface Kv {
   key: string;
   value: string;
@@ -73,7 +74,7 @@ const cache = new NodeCache({ stdTTL: 600 }); // 10-minute TTL
 
 const danceDatabaseUrl = 'https://my.strathspey.org/dd';
 
-export async function scrape(scrapeType: string, id: string, refresh: boolean): Scrape {
+export async function scrape(scrapeType: string, id: string, refresh: boolean): Promise<Scrape> {
   const cacheKey = scrapeType+'/'+id;
   if (!refresh) {
     const cached = cache.get<Scrape>(cacheKey);
@@ -162,4 +163,52 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
 
   return s;
 
+}
+
+export async function searchDance(scrapeType: string, author: string, refresh: boolean): Promise<Scrape> {
+  // csrfmiddlewaretoken=6gakuVxTqmxQ3Ewymolr7csJfeQJymGscjisc40mEg3Wtw7l566QDljagEFw6Iyc&name_pattern=&type=&bars_op=exact&bars_value=&medleytype=&couples=&shape=&progression=&author=Stolte&form1=&form2op=and&form2=&form3op=and&form3=&step1=&step2op=and&step2=&step3op=and&step3=&lists=&collection=-1
+  const postData = {
+    author,
+    csrfmiddlewaretoken: '6gakuVxTqmxQ3Ewymolr7csJfeQJymGscjisc40mEg3Wtw7l566QDljagEFw6Iyc',
+    name_pattern: '',
+    type: '',
+    bars_op: '',
+    exact: '',
+    bars_value: '',
+    medleytype: '',
+    couples: '',
+    shape: '',
+    progression: '',
+    lists: '',
+    collection: '-1'
+  };
+
+  const query = 'csrfmiddlewaretoken=6gakuVxTqmxQ3Ewymolr7csJfeQJymGscjisc40mEg3Wtw7l566QDljagEFw6Iyc&name_pattern=&type=&bars_op=exact&bars_value=&medleytype=&couples=&shape=&progression=&author=Stolte&form1=&form2op=and&form2=&form3op=and&form3=&step1=&step2op=and&step2=&step3op=and&step3=&lists=&collection=-1';
+  const query2 = qs.stringify(postData);
+  console.log(`q = ${ query2 }`);
+
+await axios.post(`${ danceDatabaseUrl }/search/dance/`, query, {
+  headers: {
+    'content-type': 'application/x-www-form-urlencoded',
+    'origin': 'https://my.strathspey.org',
+    'cookie': 'ace4_consent=+maps|+youtube|+vimeo; csrftoken=gdiiSjDDo4GgA2LXTSVzGj1BbAZXIw2U; sessionid=9yjj42jiogei7wz7kex563mi3flkl4ry'
+  }
+})
+.then(response => {
+  // console.log(response.data)
+  const $ = cheerio.load(response.data);
+  const tabContent = $('#dtab');
+  console.log(`table = ${ tabContent.text() }`);
+})
+.catch(error => console.error('Error:', error));
+
+  const s: Scrape = {
+      scrapeType,
+      id: "aId",
+      name: "aName",
+      extraInfo: "aExtraInfo",
+      props: [],
+      tables: [],
+  };
+  return s;
 }
