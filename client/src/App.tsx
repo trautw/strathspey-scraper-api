@@ -43,9 +43,50 @@ const BookList = () => {
   );
 };
 
+
+const GET_PERSON = gql`
+  query Person($personId: String) {
+    person(id: $personId) {
+      id
+      name
+      props {
+        key
+        value
+      }
+    }
+  }
+`;
+
+const Person = () => {
+  const { loading, error, data, refetch } = useQuery(GET_PERSON, {
+    variables: {personId: "12502"},
+  });
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+
+  return (
+    <div>
+      <button onClick={() => refetch({ refresh: true })}>Refresh</button>
+      <ul>
+        <li key="123">
+          <strong>{data.person.name}</strong> – {data.person.id}
+        </li>
+        {data.person.props.map((prop: {key: string, value: string}, index: number) => (
+          <li key={index}>
+            <strong>{prop.key}</strong> – {prop.value}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 const App = () => (
   <ApolloProvider client={client}>
     <div className="App">
+      <h1>📚 Person</h1>
+      <Person />
       <h1>📚 Book Scraper</h1>
       <BookList />
     </div>
