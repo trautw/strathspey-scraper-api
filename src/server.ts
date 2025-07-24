@@ -87,8 +87,8 @@ const resolvers = {
     publication: async (_: any, args: { id: string, refresh?: boolean }): Promise<Scrape> => {
       return scrape("Publication", args.id, args.refresh || false);
     },
-    searchdance: async (_: any, args: { author: string, refresh?: boolean }): Promise<Scrape> => {
-      return searchDance("SearchDance", args.author, args.refresh || false);
+    searchdance: (_: any, args: { author: string, refresh?: boolean }): Promise<Scrape> => {
+      return searchDance("Publication", args.author, args.refresh || false);
     },
   },
 };

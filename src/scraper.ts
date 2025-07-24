@@ -165,50 +165,78 @@ export async function scrape(scrapeType: string, id: string, refresh: boolean): 
 
 }
 
+function getTables(tableType: string, $: cheerio.CheerioAPI): Table[] {
+const tables: Table[] = [];
+  const tableData: TableRow[] = [];
+  const columnName: string[] = [];
+  const headLine = $('#dtab > thead > tr');
+  headLine.find('th').map((_, th) => {
+    columnName.push($(th).text());
+  });
+  const table = $('#dtab > tbody');
+
+  $(table).find('tr').map((_, row) => {
+    const d: Prop[]= [];
+    $(row).find('td').map((i,column) => {
+      d.push(parseStringEntry(columnName[i], $(column).text()));
+    });
+    tableData.push( {columns: d});
+  });
+  tables.push({name: tableType, rows: tableData});
+  return tables;
+}
+
 export async function searchDance(scrapeType: string, author: string, refresh: boolean): Promise<Scrape> {
   // csrfmiddlewaretoken=6gakuVxTqmxQ3Ewymolr7csJfeQJymGscjisc40mEg3Wtw7l566QDljagEFw6Iyc&name_pattern=&type=&bars_op=exact&bars_value=&medleytype=&couples=&shape=&progression=&author=Stolte&form1=&form2op=and&form2=&form3op=and&form3=&step1=&step2op=and&step2=&step3op=and&step3=&lists=&collection=-1
   const postData = {
-    author,
     csrfmiddlewaretoken: '6gakuVxTqmxQ3Ewymolr7csJfeQJymGscjisc40mEg3Wtw7l566QDljagEFw6Iyc',
     name_pattern: '',
     type: '',
-    bars_op: '',
-    exact: '',
+    bars_op: 'exact',
     bars_value: '',
     medleytype: '',
     couples: '',
     shape: '',
     progression: '',
-    lists: '',
-    collection: '-1'
+    author,
   };
 
-  const query = 'csrfmiddlewaretoken=6gakuVxTqmxQ3Ewymolr7csJfeQJymGscjisc40mEg3Wtw7l566QDljagEFw6Iyc&name_pattern=&type=&bars_op=exact&bars_value=&medleytype=&couples=&shape=&progression=&author=Stolte&form1=&form2op=and&form2=&form3op=and&form3=&step1=&step2op=and&step2=&step3op=and&step3=&lists=&collection=-1';
-  const query2 = qs.stringify(postData);
-  console.log(`q = ${ query2 }`);
+  // const query = 'csrfmiddlewaretoken=6gakuVxTqmxQ3Ewymolr7csJfeQJymGscjisc40mEg3Wtw7l566QDljagEFw6Iyc&name_pattern=&type=&bars_op=exact&bars_value=&medleytype=&couples=&shape=&progression=&author=Stolte&form1=&form2op=and&form2=&form3op=and&form3=&step1=&step2op=and&step2=&step3op=and&step3=&lists=&collection=-1';
+  const query = qs.stringify(postData) + '&form1=&form2op=and&form2=&form3op=and&form3=&step1=&step2op=and&step2=&step3op=and&step3=&lists=&collection=-1';
+  // console.log(`query = ${ query}`);
 
-await axios.post(`${ danceDatabaseUrl }/search/dance/`, query, {
-  headers: {
-    'content-type': 'application/x-www-form-urlencoded',
-    'origin': 'https://my.strathspey.org',
-    'cookie': 'ace4_consent=+maps|+youtube|+vimeo; csrftoken=gdiiSjDDo4GgA2LXTSVzGj1BbAZXIw2U; sessionid=9yjj42jiogei7wz7kex563mi3flkl4ry'
-  }
-})
-.then(response => {
-  // console.log(response.data)
-  const $ = cheerio.load(response.data);
-  const tabContent = $('#dtab');
-  console.log(`table = ${ tabContent.text() }`);
-})
-.catch(error => console.error('Error:', error));
+  return axios.post(`${ danceDatabaseUrl }/search/dance/`, query, {
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded',
+      'origin': 'https://my.strathspey.org',
+      'cookie': 'ace4_consent=+maps|+youtube|+vimeo; csrftoken=gdiiSjDDo4GgA2LXTSVzGj1BbAZXIw2U; sessionid=9yjj42jiogei7wz7kex563mi3flkl4ry'
+    }
+  })
+  .then(response => {
+    // console.log(response.data)
+    const $ = cheerio.load(response.data);
+    const tables = getTables(scrapeType, $);
 
-  const s: Scrape = {
-      scrapeType,
-      id: "aId",
-      name: "aName",
-      extraInfo: "aExtraInfo",
-      props: [],
-      tables: [],
-  };
-  return s;
+    const s: Scrape = {
+        scrapeType,
+        id: "aId",
+        name: "aName",
+        extraInfo: "aExtraInfo",
+        props: [],
+        tables,
+    };
+    return s;
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    const s: Scrape = {
+        scrapeType,
+        id: "aId",
+        name: "aName",
+        extraInfo: error,
+        props: [],
+        tables: [],
+    };
+    return s;
+  });
 }
